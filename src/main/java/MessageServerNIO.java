@@ -52,7 +52,6 @@ public class MessageServerNIO {
 		}
 	}
 
-
 	private static void processAcceptEvent(ServerSocketChannel serverSocketChannel) throws IOException {
 
 		LOGGER.info("Connection Accepted...");
@@ -81,7 +80,7 @@ public class MessageServerNIO {
 		buffer.flip();
 		String clientMessage = new String(buffer.array(), buffer.position(), buffer.limit());
 
-//		//Building response
+		//Building response
 		String response = " Message from client: " + clientMessage + ", server time = " + System.currentTimeMillis();
 
 		//Writing  response to buffer

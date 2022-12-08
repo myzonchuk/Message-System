@@ -7,35 +7,31 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class MessageClientNIO {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageClientNIO.class);
-    private static final int BUFFER_SIZE = 1024;
+	private static final int PORT = 4887;
+	private static final String HOST = "127.0.0.1";
+	private static final Logger LOGGER = LoggerFactory.getLogger(MessageClientNIO.class);
 
-    private final String HOST = "127.0.0.1";
-    private final int PORT = 4887;
-    private static String[] messages =
-            {"First message", "Second message", "Third message", "Fourth message", "*exit*"};
+	public static void main(String[] args) throws IOException, InterruptedException {
+		InetSocketAddress hostAddress = new InetSocketAddress(HOST, PORT);
+		SocketChannel client = SocketChannel.open(hostAddress);
 
-    public static void main(String[] args) {
-        new MessageClientNIO().startClient();
-    }
+		LOGGER.info("Client... started");
 
-    private void startClient() {
-        try {
-            SocketChannel socketChannel = SocketChannel.open(new InetSocketAddress(HOST, PORT));
-            LOGGER.info(String.format("Trying to connect to %s:%d...", HOST, PORT));
+		String threadName = Thread.currentThread().getName();
 
-            for (String msg : messages) {
-                ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-                buffer.put(msg.getBytes());
-                buffer.flip();
-                int bytesWritten = socketChannel.write(buffer);
-                LOGGER.info(String.format("Sending Message...: %s\nbytesWritten...: %d", msg, bytesWritten));
-            }
-            LOGGER.info("Closing Client connection...");
-            socketChannel.close();
-        } catch (IOException e) {
-            LOGGER.info(e.getMessage());
-            e.printStackTrace();
-        }
-    }
+		// Send messages to server
+		String[] messages = new String[]
+				{threadName + ": test1", threadName + ": test2", threadName + ": test3"};
+
+		for (int i = 0; i < messages.length; i++) {
+			byte[] message = messages[i].getBytes();
+			ByteBuffer buffer = ByteBuffer.wrap(message);
+			client.write(buffer);
+			LOGGER.info(messages[i]);
+			buffer.clear();
+			Thread.sleep(5000);
+		}
+		client.close();
+
+	}
 }
