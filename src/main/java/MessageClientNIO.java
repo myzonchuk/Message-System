@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class MessageClientNIO {
-	private static final int PORT = 4887;
+	private static final int PORT = 4888;
 	private static final String HOST = "127.0.0.1";
 	private static final Logger LOGGER = LoggerFactory.getLogger(MessageClientNIO.class);
 
@@ -15,8 +15,7 @@ public class MessageClientNIO {
 		InetSocketAddress hostAddress = new InetSocketAddress(HOST, PORT);
 		SocketChannel client = SocketChannel.open(hostAddress);
 
-		LOGGER.info("Client... started");
-
+		LOGGER.info("client started");
 		String threadName = Thread.currentThread().getName();
 
 		// Send messages to server
@@ -29,9 +28,8 @@ public class MessageClientNIO {
 			client.write(buffer);
 			LOGGER.info(messages[i]);
 			buffer.clear();
-			Thread.sleep(5000);
+			Thread.sleep(2000);
 		}
 		client.close();
-
 	}
 }
