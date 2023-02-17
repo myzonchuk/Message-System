@@ -15,12 +15,12 @@ public class ReadEventHandler implements EventHandler {
 	@Override
 	public void execute(Selector selector, SelectionKey selectionKey) {
 		final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-		LOGGER.info("read event");
+		LOGGER.info("read event handler");
 		try {
 			SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 			int bytesRead = socketChannel.read(buffer);
 
-			LOGGER.info("read data from client " + new String(buffer.array()).trim());
+			LOGGER.info("read data from client: " + new String(buffer.array()).trim());
 			if (bytesRead == -1) {
 				LOGGER.info("connection closed " + socketChannel.getRemoteAddress());
 				socketChannel.close();

@@ -18,6 +18,10 @@ public class PollerImpl implements Poller {
 	private final Selector selector;
 	private final Map<Integer, EventHandler> events;
 
+	public Selector getSelector() {
+		return selector;
+	}
+
 	public PollerImpl() throws IOException {
 		this.selector = Selector.open();
 		this.events = new HashMap<>();
@@ -33,7 +37,7 @@ public class PollerImpl implements Poller {
 
 	@Override
 	public void poll() {
-		while (true) {
+		while (!Thread.currentThread().isInterrupted()) {
 			try {
 				selector.select();
 				Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();

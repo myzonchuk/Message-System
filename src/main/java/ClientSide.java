@@ -1,16 +1,16 @@
-import event.AcceptEventHandler;
-import event.ConnectEventHandler;
 import event.ReadEventHandler;
-import event.WriteEventHandler;
+import event.WriteEventHandlerForClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import poller.PollerImpl;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class ClientSide {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClientSide.class);
@@ -26,22 +26,32 @@ public class ClientSide {
 		client.run();
 	}
 
+	//poller must run in standalone mode (executor)
+
 	private void run() {
-		LOGGER.info("starting message client");
-		try {
-			SocketChannel clientSocket = SocketChannel.open(new InetSocketAddress(HOST, PORT));
-			clientSocket.configureBlocking(false);
+		Executor executor = Executors.newFixedThreadPool(10);
+		executor.execute(() -> {
+			LOGGER.info("starting message client");
+			try {
+				final WriteEventHandlerForClient writeEventHandlerForClient = new WriteEventHandlerForClient();
+				final Selector selector = poller.getSelector();
+				SocketChannel clientSocket = SocketChannel.open(new InetSocketAddress(HOST, PORT));
+				clientSocket.configureBlocking(false);
 
-			poller.registerChannel(clientSocket, SelectionKey.OP_CONNECT);
+				poller.registerChannel(clientSocket, SelectionKey.OP_CONNECT);
 
-			poller.registerEvent(SelectionKey.OP_CONNECT, new ConnectEventHandler());
-			poller.registerEvent(SelectionKey.OP_READ, new ReadEventHandler());
-			poller.registerEvent(SelectionKey.OP_WRITE, new WriteEventHandler());
+				poller.registerEvent(SelectionKey.OP_READ, new ReadEventHandler());
+				poller.registerEvent(SelectionKey.OP_WRITE, new WriteEventHandlerForClient());
 
-			poller.poll();
+				SelectionKey selectionKey = clientSocket.keyFor(selector);
 
-		} catch (IOException e) {
-			LOGGER.info(e.getMessage());
-		}
+				writeEventHandlerForClient.execute(selector, selectionKey);
+
+				poller.poll();
+
+			} catch (IOException e) {
+				LOGGER.info(e.getMessage());
+			}
+		});
 	}
 }

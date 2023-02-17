@@ -8,17 +8,26 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 
-public class WriteEventHandler implements EventHandler{
+public class WriteEventHandler implements EventHandler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(WriteEventHandler.class);
 
 	@Override
 	public void execute(Selector selector, SelectionKey selectionKey) {
-		LOGGER.info("write event");
+		LOGGER.info("write event for server side");
 		try {
 			final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 			final ByteBuffer buffer = (ByteBuffer) selectionKey.attachment();
 			int bytesRead = socketChannel.read(buffer);
+
+			//Building response
+			String clientMessage = new String(buffer.array(), buffer.position(), buffer.limit());
+			String response = "\r\n" + "Read message from client: " + clientMessage + "\r\n";
+			//Writing  response to buffer
+			buffer.clear();
+			buffer.put(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
+			buffer.flip();
 
 			socketChannel.write(buffer);
 			buffer.clear();
@@ -31,12 +40,6 @@ public class WriteEventHandler implements EventHandler{
 		} catch (IOException e) {
 			LOGGER.error(e.getMessage());
 		}
-//			String clientMessage = new String(buffer.array(), buffer.position(), buffer.limit());
-//			//Building response
-//			String response = "Message from client: " + clientMessage + ", server time = " + System.currentTimeMillis();
-//			//Writing  response to buffer
-//			buffer.clear();
-//			buffer.put(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
-//			buffer.flip();
 	}
 }
+//PrepostHandler concurrecy pattern щоб не дублювалися writeHandler для client and server
